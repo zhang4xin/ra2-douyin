@@ -1,0 +1,12 @@
+{
+  "miniprogramRoot": "./",
+  "projectname": "ra2-douyin",
+  "description": "网页红警（RA2WEB）单机版 - 抖音小游戏移植工程",
+  "appid": "touristappid",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "urlCheck": false
+  },
+  "compileType": "game"
+}
