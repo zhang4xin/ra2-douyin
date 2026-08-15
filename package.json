@@ -1,0 +1,21 @@
+{
+  "name": "ra2-douyin",
+  "version": "0.83.4-dy.0",
+  "private": true,
+  "description": "网页红井（RA2WEB）抖音小游戏·单机版移植工程",
+  "scripts": {
+    "test": "node --test",
+    "check-size": "node scripts/check-size.js",
+    "audit-dom": "node scripts/audit-dom.js",
+    "build": "node scripts/build.js",
+    "format": "prettier --write adapter scripts tests game.js",
+    "format:check": "prettier --check adapter scripts tests game.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "prettier": "^3.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

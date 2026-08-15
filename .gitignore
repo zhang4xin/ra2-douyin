@@ -1,3 +1,13 @@
+# 运行时下载的游戏资源缓存
 gameres
+
+# 构建产物 / 依赖
+node_modules/
+dist/
+*.log
+
+# 系统 / 编辑器
 .DS_Store
-.DS_Store
+Thumbs.db
+.idea/
+.vscode/
