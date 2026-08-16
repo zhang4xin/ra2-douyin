@@ -33,16 +33,12 @@ class ViewportTransform {
     return { x, y };
   }
 
-  // 逻辑坐标 -> 物理坐标（用于把引擎事件映射回屏幕绘制）。
+  // 逻辑坐标 -> 物理坐标（用于把引擎事件映射回屏幕绘制，Phase 2 渲染接管用）。
   toPhysical(x, y) {
     return {
       x: x * this.scale + this.offsetX,
       y: y * this.scale + this.offsetY,
     };
-  }
-
-  get blackBarTop() {
-    return this.offsetY;
   }
 }
 

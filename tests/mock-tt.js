@@ -4,10 +4,8 @@
 // 提供 getGameCanvas / getSystemInfoSync / 触控事件发射器 / 存储等最小面。
 
 function makeContext() {
-  const calls = [];
   const noop = () => {};
   return {
-    calls,
     fillRect: noop,
     fillText: noop,
     clearRect: noop,

@@ -83,3 +83,77 @@ test('EventSynthesizer: 双击合成 dblclick', () => {
 
   assert.ok(events.some((e) => e.type === 'dblclick'));
 });
+
+test('EventSynthesizer: 长按后抬手不补发 click', async () => {
+  const events = [];
+  const es = new EventSynthesizer((ev) => events.push(ev), {
+    vibrate: false,
+    longPressMs: 20,
+    tapMaxMs: 2000,
+  });
+
+  const touch = { identifier: 0, clientX: 100, clientY: 100 };
+  es.onTouchStart({ touches: [touch], changedTouches: [touch] });
+  await new Promise((r) => setTimeout(r, 40));
+  es.onTouchEnd({ touches: [], changedTouches: [touch] });
+
+  assert.ok(events.some((e) => e.type === 'contextmenu'));
+  assert.ok(!events.some((e) => e.type === 'click'));
+});
+
+test('EventSynthesizer: 双指捏合合成 wheel(deltaY 缩放)', () => {
+  const events = [];
+  const es = new EventSynthesizer((ev) => events.push(ev), { vibrate: false });
+
+  const t1 = { identifier: 1, clientX: 100, clientY: 300 };
+  const t2 = { identifier: 2, clientX: 200, clientY: 300 };
+  es.onTouchStart({ touches: [t1, t2], changedTouches: [t1, t2] });
+  es.onTouchMove({
+    touches: [
+      { identifier: 1, clientX: 90, clientY: 300 },
+      { identifier: 2, clientX: 210, clientY: 300 },
+    ],
+    changedTouches: [],
+  });
+
+  const wheel = events.find((e) => e.type === 'wheel');
+  assert.ok(wheel, '应合成 wheel 事件');
+  assert.notStrictEqual(wheel.deltaY, 0, '两指距离变化应产生 deltaY');
+
+  // 双指手势结束不应补发 click/dblclick
+  es.onTouchEnd({
+    touches: [t2],
+    changedTouches: [{ identifier: 2, clientX: 210, clientY: 300 }],
+  });
+  es.onTouchEnd({ touches: [], changedTouches: [{ identifier: 1, clientX: 90, clientY: 300 }] });
+  assert.ok(!events.some((e) => e.type === 'click' || e.type === 'dblclick'));
+});
+
+test('EventSynthesizer: 非法坐标（NaN/undefined）被丢弃', () => {
+  const events = [];
+  const es = new EventSynthesizer((ev) => events.push(ev), { vibrate: false });
+
+  const bad = { identifier: 0, clientX: NaN, clientY: undefined };
+  es.onTouchStart({ touches: [bad], changedTouches: [bad] });
+  es.onTouchEnd({ touches: [], changedTouches: [bad] });
+
+  assert.strictEqual(events.length, 0, '非法触点不产生任何事件');
+  assert.strictEqual(es.points.size, 0, '非法触点不入点集');
+});
+
+test('EventSynthesizer: touchcancel 清理状态，不残留长按', async () => {
+  const events = [];
+  const es = new EventSynthesizer((ev) => events.push(ev), {
+    vibrate: false,
+    longPressMs: 20,
+  });
+
+  const touch = { identifier: 0, clientX: 100, clientY: 100 };
+  es.onTouchStart({ touches: [touch], changedTouches: [touch] });
+  es.onTouchCancel({ changedTouches: [touch] });
+  await new Promise((r) => setTimeout(r, 40));
+
+  assert.strictEqual(es.points.size, 0);
+  assert.strictEqual(es.gesture, null);
+  assert.ok(!events.some((e) => e.type === 'contextmenu'), '取消后长按不应再触发');
+});

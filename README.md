@@ -15,15 +15,15 @@
 ## 快速开始
 
 ```bash
-# 质量门禁
-npm install            # 仅安装开发期依赖（esbuild / prettier）
-npm test               # Node 无头冒烟（mock tt 运行时）
-npm run audit-dom      # 无裸 DOM/BOM 引用检查
-npm run check-size     # 包体预算守卫
+npm install             # 仅安装开发期依赖（esbuild / prettier）
+npm run quality-gate    # 一键质量门禁：test + audit-dom + check-size + format:check
 ```
 
 用抖音开发者工具「导入项目」选择本仓库根目录，`compileType` 已设为 `game`；
 将 `project.config.json` 里的 `appid` 替换为你们的小游戏 AppID。
+
+**给开发者的第一份阅读材料**：`AGENTS.md` 与 `memory-bank/`（游戏设计 / 实施计划 / 架构 / 进度）。
+AI 助手与员工都必须「先读上下文再动手」（vibe-coding 原则）。
 
 ## 目录结构
 
@@ -33,6 +33,7 @@ adapter/                                    # 自研适配层（触控/视口/�
 scripts/                                    # 构建与质量门禁脚本
 tests/                                      # Node 无头测试（mock tt）
 docs/                                       # 决策记录 / 触控方案 / 安全 / 路线图
+memory-bank/                                # Always 先读：GDD / 实施计划 / 架构 / 进度
 assets/releases/0.83.4-r0918ad8-dac2bf5b2/  # 上游引擎（压缩产物，不可手改）
 build-config.json                           # 版本 / CDN / 视口单点配置
 PORTING.md                                  # 移植技术状态（live doc）

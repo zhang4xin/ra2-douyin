@@ -11,12 +11,7 @@ const ctx = canvas.getContext('2d');
 
 const adapter = createAdapter(tt);
 
-// 引擎逻辑分辨率（config.ini viewport），触控坐标据此换算。
-const VW = config.viewport.width;
-const VH = config.viewport.height;
-
 const STATUS = {
-  state: 'booting',
   title: '网页红井 - 单机版',
   lines: [
     `版本 ${config.version}（引擎 ${config.engine.upstreamVersion}）`,
@@ -71,11 +66,6 @@ adapter.bindTouch((ev) => {
   const logical = adapter.viewport.toLogical(ev.clientX, ev.clientY);
   if (!logical) return;
   adapter.eventTarget.dispatchEvent(ev);
-});
-
-// 记录最近一次触控映射结果，便于真机调试。
-adapter.eventTarget.addEventListener('click', () => {
-  STATUS.state = 'interactive';
 });
 
 canvas.on('resize', resize);

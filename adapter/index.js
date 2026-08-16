@@ -17,7 +17,7 @@ const config = require('./config');
 const { createGlobalScope } = require('./core/GlobalScope');
 const ViewportTransform = require('./core/ViewportTransform');
 const EventSynthesizer = require('./input/EventSynthesizer');
-const { EventTarget, makeEventConstructor } = require('./dom/EventTarget');
+const { EventTarget } = require('./dom/EventTarget');
 
 function createAdapter(ttApi) {
   const globalScope = createGlobalScope(ttApi);

@@ -45,11 +45,10 @@ Review 规则：至少 1 人 approve；维护敏感路径（配置 / assets / �
 ## 质量门槛（合入 main 前必须通过）
 
 ```bash
-npm test          # 无头冒烟（mock tt）
-npm run audit-dom # 无裸 DOM/BOM 引用
-npm run check-size
-npm run format:check
+npm run quality-gate   # 一键门禁 = test + audit-dom + check-size + format:check
 ```
+
+> 提交前也请先读 `AGENTS.md` 与 `memory-bank/`（Always 先读文档）。
 
 ## 版本与发布
 
@@ -61,5 +60,5 @@ npm run format:check
 1. 安装 [抖音开发者工具](https://developer.open-douyin.com/)。
 2. 克隆：`git clone https://github.com/zhang4xin/ra2-douyin.git`（或 `--filter=blob:none` 懒加载）。
 3. 导入项目根目录，把 `project.config.json` 的 `appid` 替换为真实 AppID。
-4. 读三份文档：`README.md` → `CONTRIBUTING.md` → `docs/roadmap.md`。
+4. 读四份文档：`README.md` → `AGENTS.md` → `CONTRIBUTING.md` → `memory-bank/`（GDD/实施计划/架构/进度）。
 5. 从 Issues 认领任务，切 `feat/xxx` 分支开发。

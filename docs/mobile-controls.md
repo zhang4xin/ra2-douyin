@@ -12,8 +12,8 @@
 | 左键框选 | 单击拖拽 | ✅ 已实现 |
 | 双击全选同类 | 双击 | ✅ 已实现 |
 | 右键指令 | 长按 0.4s（+震动反馈） | ✅ 已实现（`contextmenu` button=2） |
-| 滚轮缩放 | 双指捏合 | ✅ 已实现（`wheel`） |
-| 滚屏 / 镜头平移 | 双指拖动 | ✅ 已实现（中键 button=1） |
+| 滚轮缩放 | 双指捏合 | ✅ 已实现（`wheel` deltaY） |
+| 滚屏 / 镜头平移 | 双指拖动（中键 button=1） | 🚧 Phase 2：引擎渲染接管后再做，避免产出引擎不消费的事件 |
 | 编队 Ctrl+1~6 | 编队浮条（Phase 2） | 🚧 |
 | 全选/空闲单位/基地/最近事件（Ctrl+A/N/H/空格） | 快捷按钮（Phase 2） | 🚧 |
 | Q/W/E/A/S 等快捷键 | 命令条按钮（Phase 2） | 🚧 |
@@ -30,7 +30,9 @@
 | dblTapMaxMs | 300ms | 双击间隔 |
 | longPressMs | 500ms | 长按=右键的时长 |
 | dragThreshold | 10px | 进入"拖动框选"的位移阈值 |
-| moveIntervalMs | 16ms | 拖动时 mousemove 插值补帧间隔 |
+
+> 说明：初版曾计划 16ms 定时器给 mousemove 补帧，实测 `tt.onTouchMove` 采样率已足够，
+> 定时器纯属多余状态，已按最小实现移除（mousemove 随 touchmove 直发）。
 
 ## 触屏 UI 布局（Phase 2，叠加层 HUD）
 
