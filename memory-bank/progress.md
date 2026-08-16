@@ -13,6 +13,7 @@
 - **M0.8 仓库瘦身完成**：删除 186 个历史版本目录（assets/releases 91 个 + runtime/releases 91 个 + res/werhd/releases 4 个），`versions.json` 收敛为 0.83.4；工作树 686MB→22MB，全仓口径 13.76MB（<60MB）。已澄清：git pack 以 delta 存储历史，克隆体积本就 ~26MB，无需改写历史。
 - **M0.7 WASM Spike（Node 侧）通过**：`node spike/wasm-load/verify-node.js` 用 7zz.js 胶水 + `wasmBinary` 注入完成建 7z→列表→解压→chmod→读回闭环，PASS。关键结论（ADR-0003）：imports=env(40)+wasi_snapshot_preview1(7)；非浏览器环境需注入 wasmBinary；解压文件需 chmod 才能读回。
 - **M0.7 抖音端待验证**：`spike/wasm-load/douyin-spike/` 自包含工程就绪，需在开发者工具/真机跑三项 PASS 后更新本节。
+- **工作目录收敛（重要）**：本地唯一工作副本统一为 `E:\youxi\hongjin\ra2-douyin`（已同步至 ae62389 并与 origin/main 一致，npm test 12/12）。原 `E:\youxi\hongjin\ra2web.github.io-main` 仅作历史副本不再使用；后续所有改动、提交、推送都在本目录进行。
 
 ## 待办（下一步）
 
