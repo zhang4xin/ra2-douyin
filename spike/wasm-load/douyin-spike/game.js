@@ -6,7 +6,7 @@
 // 完成后该 spike 目录将被删除。
 
 var fsMgr = tt.getFileSystemManager();
-var canvas = tt.getGameCanvas();
+var canvas = (tt.createCanvas && tt.createCanvas()) || tt.getGameCanvas();
 var ctx = canvas.getContext('2d');
 
 var LINES = [];

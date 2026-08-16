@@ -1,7 +1,7 @@
 'use strict';
 
 // 抖音运行时 mock（Node 无头冒烟测试用）。
-// 提供 getGameCanvas / getSystemInfoSync / 触控事件发射器 / 存储等最小面。
+// 与真实环境一致：上屏画布 = tt.createCanvas() 首次调用结果（惰性单例）。
 
 function makeContext() {
   const noop = () => {};
@@ -35,6 +35,19 @@ function makeContext() {
   };
 }
 
+function makeScreenCanvas(opts) {
+  return {
+    width: opts.width || 1280,
+    height: opts.height || 720,
+    style: {},
+    getContext() {
+      return makeContext();
+    },
+    on() {},
+    addEventListener() {},
+  };
+}
+
 function createMockTT(options) {
   const opts = options || {};
   const listeners = {
@@ -47,17 +60,13 @@ function createMockTT(options) {
   const tt = {
     _listeners: listeners,
 
+    createCanvas() {
+      if (!tt.__screen) tt.__screen = makeScreenCanvas(opts);
+      return tt.__screen;
+    },
+
     getGameCanvas() {
-      return {
-        width: opts.width || 1280,
-        height: opts.height || 720,
-        style: {},
-        getContext() {
-          return makeContext();
-        },
-        on() {},
-        addEventListener() {},
-      };
+      return tt.createCanvas();
     },
 
     getSystemInfoSync() {

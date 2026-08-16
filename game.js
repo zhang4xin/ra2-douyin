@@ -6,7 +6,14 @@
 const config = require('./adapter/config');
 const { createAdapter } = require('./adapter/index');
 
-const canvas = tt.getGameCanvas();
+// 抖音上屏画布：tt.createCanvas() 首次调用返回上屏画布（官方标准）；
+// tt.getGameCanvas() 是部分运行时的旧 API，作为兜底。
+const canvas =
+  (typeof tt.createCanvas === 'function' && tt.createCanvas()) ||
+  (typeof tt.getGameCanvas === 'function' && tt.getGameCanvas());
+if (!canvas) {
+  throw new Error('当前环境无画布 API：缺少 tt.createCanvas / tt.getGameCanvas');
+}
 const ctx = canvas.getContext('2d');
 
 const adapter = createAdapter(tt);

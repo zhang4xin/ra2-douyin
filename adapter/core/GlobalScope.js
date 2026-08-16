@@ -18,7 +18,20 @@ function createGlobalScope(ttApi) {
 
   if (tt) {
     scope.tt = tt;
-    scope.getGameCanvas = tt.getGameCanvas ? tt.getGameCanvas.bind(tt) : null;
+
+    // 上屏画布：抖音标准为 tt.createCanvas() 首次调用返回上屏画布；
+    // 部分运行时提供 tt.getGameCanvas()。统一为惰性单例，确保后续
+    // 所有 getGameCanvas() 调用都拿到同一个上屏画布。
+    let screenCanvas = null;
+    scope.getGameCanvas = function getGameCanvas() {
+      if (screenCanvas) return screenCanvas;
+      if (typeof tt.createCanvas === 'function') {
+        screenCanvas = tt.createCanvas();
+      } else if (typeof tt.getGameCanvas === 'function') {
+        screenCanvas = tt.getGameCanvas();
+      }
+      return screenCanvas;
+    };
     scope.createImage = tt.createImage ? tt.createImage.bind(tt) : null;
     scope.createInnerAudioContext = tt.createInnerAudioContext ? tt.createInnerAudioContext.bind(tt) : null;
     scope.createCanvas = tt.createCanvas ? tt.createCanvas.bind(tt) : null;
