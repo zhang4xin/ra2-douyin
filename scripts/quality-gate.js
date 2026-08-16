@@ -10,9 +10,10 @@ const root = path.resolve(__dirname, '..');
 const run = (cmd, args) => execFileSync(cmd, args, { cwd: root, stdio: 'pipe' });
 
 const gates = [
-  { name: 'test (node --test)', run: () => run(process.execPath, ['--test']) },
+  { name: 'test (node --test)', run: () => run(process.execPath, ['--test', '--test-force-exit']) },
   { name: 'audit-dom', run: () => run(process.execPath, ['scripts/audit-dom.js']) },
   { name: 'check-size', run: () => run(process.execPath, ['scripts/check-size.js']) },
+  { name: 'smoke-render', run: () => run(process.execPath, ['scripts/smoke-render.js']) },
   {
     name: 'format:check',
     run: () =>
@@ -20,6 +21,7 @@ const gates = [
         'node_modules/prettier/bin/prettier.cjs',
         '--check',
         'adapter',
+        'game',
         'scripts',
         'tests',
         'game.js',

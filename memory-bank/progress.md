@@ -16,6 +16,11 @@
 - **工作目录收敛（重要）**：本地唯一工作副本统一为 `E:\youxi\hongjin\ra2-douyin`（已同步至 ae62389 并与 origin/main 一致，npm test 12/12）。原 `E:\youxi\hongjin\ra2web.github.io-main` 仅作历史副本不再使用；后续所有改动、提交、推送都在本目录进行。
 - **抖音开发者工具编译阻塞与修复**：根工程 `game.js` 用了 `canvas.on('resize')`（抖音无此 API）→ 改 `tt.onWindowResize`；同时工具会把包内**所有 .js** 编译成 CJS，而引擎 `werhd.min.js` 是 Vite ESM 带顶层 `await`（如 `await (0,_werhdmin.l)("…/ffmpeg.min.js")`）→ 编译直接失败。修复：`project.config.json` 加 `packOptions.ignore`（工具 ≥4.2.7 支持）跳过 `assets/releases` + `runtime/releases`；M1 打包链将把引擎打成可编译的 CommonJS 单包再放回包内（届时按文件而非整目录忽略）。
 - 新增 `.gitattributes`（`* text=auto eol=lf` + 二进制标记），统一 LF 行尾，避免 Windows CRLF 导致 prettier 误报（commit a819f30）。
+- **方向转向（重要，ADR-0005）**：放弃红警引擎移植，**改为自研原创 RTS「钢铁前线」**（玩法参考红警，代码/素材全自研，无版权负担）。触发原因：抖音开发者工具整包编译 ESM 引擎（顶层 await）受阻；上架需版权方书面授权。已删除 `assets/ runtime/ res/ lib/` 引擎与网页残留（109 文件）及 `spike/`（7z WASM 验证已完成使命）。
+- **自研 RTS MVP 完成**：`game/` 目录（config/state/ai/ui/input/render/main），完整玩法闭环——资金收入（矿场加成）、建造（兵营/工厂/矿场/炮塔）、生产（步兵/坦克）、单击选择/拖动框选/长按右键指挥（移动/攻击）、敌方 AI（自主发展+攒波进攻+每 8s 重申指令）、胜负判定、重开。修复：单位撞障碍完全卡死 → 贴边滑行绕障；AI 部队被堵在半路 → 波次指令周期重申。
+- 质量门禁升级：新增 `scripts/smoke-render.js` 无头渲染+输入冒烟测试并纳入 quality-gate；单测新增 `tests/game-state.test.js`（13 项核心逻辑用例）；`audit-dom` 扫描范围扩到 `game/`；`check-size` 重写（不再依赖引擎目录）。全部门禁绿（25 测试 + 冒烟 + 审计 + 体积 + 格式）。
+- 测试进程不退出的坑：`boot.test.js` 加载 game.js 后主循环用 `setTimeout` 链无限 rAF，测试完成后 Node 等待句柄不退出 → 统一加 `--test-force-exit`（测试本身 25/25 全过）。
+- 文档同步：README/AGENTS/CONTRIBUTING/@architecture 全面改写为「原创 RTS」定位；新增 ADR-0005；删除 `spike/`（7z WASM 验证已完成使命）。
 
 ## 待办（下一步）
 

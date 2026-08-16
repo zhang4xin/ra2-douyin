@@ -5,7 +5,7 @@
 
 function makeContext() {
   const noop = () => {};
-  return {
+  const ctx = {
     fillRect: noop,
     fillText: noop,
     clearRect: noop,
@@ -18,11 +18,30 @@ function makeContext() {
     moveTo: noop,
     lineTo: noop,
     arc: noop,
+    rect: noop,
     fill: noop,
     stroke: noop,
+    strokeRect: noop,
+    setTransform: noop,
+    setLineDash: noop,
+    measureText() {
+      return { width: 10 };
+    },
     set fillStyle(v) {},
     get fillStyle() {
       return '#000';
+    },
+    set strokeStyle(v) {},
+    get strokeStyle() {
+      return '#000';
+    },
+    set lineWidth(v) {},
+    get lineWidth() {
+      return 1;
+    },
+    set globalAlpha(v) {},
+    get globalAlpha() {
+      return 1;
     },
     set font(v) {},
     get font() {
@@ -32,7 +51,12 @@ function makeContext() {
     get textAlign() {
       return 'left';
     },
+    set textBaseline(v) {},
+    get textBaseline() {
+      return 'alphabetic';
+    },
   };
+  return ctx;
 }
 
 function makeScreenCanvas(opts) {

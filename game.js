@@ -1,10 +1,9 @@
-// 抖音小游戏入口（单机版）
-// 运行环境：抖音开发者工具 / 抖音 App（CommonJS）
-// 职责：装配适配层 -> 绘制启动状态 -> 绑定触控 -> 预留引擎加载点。
-// 引擎接入与 DOM 适配详见 PORTING.md 与 adapter/。
+// 抖音小游戏入口（原创 RTS：钢铁前线）
+// 职责：获取上屏画布 -> 装配适配层 -> 启动游戏主循环。
+// 游戏逻辑全在 game/ 目录（纯逻辑，可单测），本文件只做环境装配。
 
-const config = require('./adapter/config');
 const { createAdapter } = require('./adapter/index');
+const { createMain } = require('./game/main');
 
 // 抖音上屏画布：tt.createCanvas() 首次调用返回上屏画布（官方标准）；
 // tt.getGameCanvas() 是部分运行时的旧 API，作为兜底。
@@ -22,113 +21,21 @@ function ensureCanvasSize() {
   const sys = (tt.getSystemInfoSync && tt.getSystemInfoSync()) || {};
   const w = sys.windowWidth || sys.screenWidth || canvas.width || 1024;
   const h = sys.windowHeight || sys.screenHeight || canvas.height || 768;
-  if (!canvas.width || canvas.width !== w) canvas.width = w;
-  if (!canvas.height || canvas.height !== h) canvas.height = h;
+  if (canvas.width !== w) canvas.width = w;
+  if (canvas.height !== h) canvas.height = h;
   return { w, h };
 }
 
-const STATUS = {
-  title: '网页红井 - 单机版',
-  lines: [
-    `版本 ${config.version}（引擎 ${config.engine.upstreamVersion}）`,
-    '单机模式：遭遇战 + 单人战役',
-    '联机已禁用（servers.ini 全部 available=no）',
-    '',
-    'Phase 0 骨架：适配层基础已装配',
-    '接入步骤见项目根目录 PORTING.md',
-  ],
-};
-
-function drawStatus() {
-  const { w, h } = ensureCanvasSize();
-  ctx.fillStyle = '#0a0a14';
-  ctx.fillRect(0, 0, w, h);
-
-  // 标题
-  ctx.fillStyle = '#d4b106';
-  ctx.font = `bold ${Math.floor(h / 14)}px sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText(STATUS.title, w / 2, h / 5);
-
-  // 状态行
-  ctx.fillStyle = '#e8e8e8';
-  ctx.font = `${Math.floor(h / 30)}px sans-serif`;
-  STATUS.lines.forEach((line, i) => {
-    ctx.fillText(line, w / 2, h / 5 + (i + 1) * (h / 14));
-  });
-
-  // 触控映射提示（首次体验引导）
-  ctx.fillStyle = '#8fa0c8';
-  ctx.font = `${Math.floor(h / 34)}px sans-serif`;
-  const tips = ['单击 = 选择/左键', '拖动 = 框选', '长按 = 右键指令', '双指 = 移动镜头 / 缩放'];
-  tips.forEach((tip, i) => {
-    ctx.fillText(tip, w / 2, h / 5 + (STATUS.lines.length + 1) * (h / 14) + i * (h / 18));
-  });
-  ctx.textAlign = 'left';
-
-  // 触控链路可视化：最近一次合成事件的位置与类型。
-  if (lastGesture) {
-    ctx.fillStyle = '#ffd24a';
-    ctx.strokeStyle = '#ffd24a';
-    ctx.beginPath();
-    ctx.arc(lastGesture.x, lastGesture.y, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(lastGesture.x - 14, lastGesture.y);
-    ctx.lineTo(lastGesture.x + 14, lastGesture.y);
-    ctx.moveTo(lastGesture.x, lastGesture.y - 14);
-    ctx.lineTo(lastGesture.x, lastGesture.y + 14);
-    ctx.stroke();
-    ctx.fillStyle = '#ffd24a';
-    ctx.font = `${Math.max(12, Math.floor(h / 40))}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(
-      `最近操作: ${lastGesture.type} @ (${Math.round(lastGesture.x)}, ${Math.round(lastGesture.y)})`,
-      w / 2,
-      h - Math.floor(h / 20),
-    );
-    ctx.textAlign = 'left';
-  }
-}
-
-function resize() {
-  const { w, h } = ensureCanvasSize();
-  adapter.viewport.setPhysical(w, h);
-  drawStatus();
-}
-
-// 最近一次合成手势（画布物理坐标），用于触控链路可视化。
-let lastGesture = null;
-
-// 把合成出的鼠标/wheel 事件派发到事件总线。
-// 引擎接入后，这里应把事件送到迷你 DOM 树的冒泡链（Phase 1）。
-adapter.bindTouch((ev) => {
-  const logical = adapter.viewport.toLogical(ev.clientX, ev.clientY);
-  if (!logical) return;
-  lastGesture = { type: ev.type, x: ev.clientX, y: ev.clientY };
-  if (ev.type !== 'mousemove') {
-    console.log('[game] 触控事件', ev.type, '@', Math.round(ev.clientX), Math.round(ev.clientY));
-  }
-  adapter.eventTarget.dispatchEvent(ev);
-  drawStatus();
-});
-
 if (typeof tt.onWindowResize === 'function') {
-  tt.onWindowResize(resize);
+  tt.onWindowResize(ensureCanvasSize);
 } else if (canvas.on) {
-  canvas.on('resize', resize);
+  canvas.on('resize', ensureCanvasSize);
 }
 
 try {
-  resize();
-  drawStatus();
-  const sys = tt.getSystemInfoSync ? tt.getSystemInfoSync() : {};
-  console.log(`[game] 启动成功 canvas=${canvas.width}x${canvas.height} window=${sys.windowWidth}x${sys.windowHeight}`);
+  ensureCanvasSize();
+  const main = createMain(adapter, canvas, ctx);
+  main.start();
 } catch (e) {
   console.error('[game] 启动失败：', e && e.stack ? e.stack : e);
 }
-
-// TODO(移植): 在此处加载 DOM 适配层并启动引擎（见 PORTING.md 路线图）。
-// Phase 1 目标：scripts/build.js 把 index.html 的 lib 链 + werhd.min.js
-// 打包为 CommonJS，game.js 顺序加载后触发引擎 main。

@@ -1,6 +1,6 @@
 'use strict';
 
-// DOM 引用审计：扫描我们自己的移植层代码（adapter/、game.js、scripts/），
+// DOM 引用审计：扫描我们自己的代码（adapter/、game/、game.js、scripts/），
 // 找出"直接裸用浏览器 DOM/BOM"的调用——在抖音小游戏运行时这些会直接崩。
 // 用法：node scripts/audit-dom.js
 //
@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const SCAN_DIRS = ['adapter', 'game.js', 'scripts'];
+const SCAN_DIRS = ['adapter', 'game', 'game.js', 'scripts'];
 const EXCLUDE_DIRS = new Set(['node_modules']);
 
 // 浏览器专属裸标识，出现在对象访问链左侧即为危险引用。

@@ -31,34 +31,33 @@
 
 - 运行环境（抖音小游戏）**无 DOM/BOM**，JS 为 CommonJS。
 - 禁止裸用 `window.` / `document.` / `self.`（`npm run audit-dom` 门禁）。
-- 引擎逻辑分辨率恒为 1024x768；触控坐标经 `ViewportTransform.toLogical` 换算。
-- 引擎版本/路径只从 `adapter/config.js`（由 `build-config.json` 注入）读取。
-- 敏感只读区：`config.ini` / `servers.ini` / `assets/` / `runtime/`，改动必须走 PR 并声明。
+- 游戏逻辑（`game/`）保持**纯逻辑无平台依赖**（可单测）；只允许 `game.js`、`adapter/`、`game/render.js` 接触 canvas/tt。
+- 游戏坐标：地图空间（`config.js` 的 TILE/MAP_* 决定）与屏幕坐标的换算集中在 `game/ui.js`，勿在别处自行换算。
 
 ## 提交与 PR（ECC git-workflow）
 
-- 分支：`feat/xxx` `fix/xxx` `chore/xxx` `docs/xxx` `spike/xxx`，squash 合入 main。
+- 分支：`feat/xxx` `fix/xxx` `chore/xxx` `docs/xxx`，squash 合入 main。
 - Commit：Conventional Commits（`feat|fix|docs|chore|refactor|test|perf|build` + scope）。
 - PR 必填：动机 / 改动清单 / 验证证据（测试输出、截图、录屏）——没证据默认 NEEDS WORK。
 
 ## 质量门禁（合入 main 前必须全绿）
 
 ```bash
-npm run quality-gate   # = test + audit-dom + check-size + format:check
+npm run quality-gate   # = test + audit-dom + check-size + smoke-render + format:check
 ```
 
-- `npm test`：Node 无头冒烟（mock tt），不得依赖真机。
-- `npm run audit-dom`：移植层无裸 DOM/BOM。
+- `npm test`：Node 无头测试（mock tt），核心逻辑在 `tests/game-state.test.js`，不得依赖真机。
+- `npm run audit-dom`：代码无裸 DOM/BOM。
 - `npm run check-size`：包体预算。
+- `npm run smoke-render`：无头渲染 + 输入链路冒烟。
 - `npm run format:check`：prettier。
-- 新增/改动逻辑同步补测试；80% 覆盖率是长期目标，边界与主流程必须有测试。
+- 新增/改动逻辑同步补测试；边界与主流程必须有测试。
 
 ## 版本管理
 
-- 锁上游 `0.83.4`；自有版本 `0.83.4-dy.N`（maintainer 打 tag）。
-- 升级引擎 = 改 `build-config.json` + 替换版本目录 + 跑 `docs/release-versioning.md` 回归流程。
+- 自有版本 `0.x.y`（maintainer 打 tag），同步 `game/config.js` 的 `GAME_VERSION` 与 `package.json`。
 
 ## 红线（不谈判）
 
-- 保留名称：`RA2WEB` / `网页红井` / `红色井界` 至少其一；禁止商用（除非书面授权）。
+- 本项目为**原创游戏**，不得引入任何第三方游戏（含红警/RA2）的代码、素材或名称。
 - 遥测/联机保持关闭；域名白名单外零外连（详见 `docs/security.md`）。

@@ -13,14 +13,6 @@
     "ignore": [
       {
         "type": "folder",
-        "value": "assets/releases"
-      },
-      {
-        "type": "folder",
-        "value": "runtime/releases"
-      },
-      {
-        "type": "folder",
         "value": "tests"
       },
       {
@@ -29,7 +21,15 @@
       },
       {
         "type": "folder",
-        "value": "spike"
+        "value": "memory-bank"
+      },
+      {
+        "type": "folder",
+        "value": "docs"
+      },
+      {
+        "type": "suffix",
+        "value": ".md"
       }
     ]
   }
