@@ -9,10 +9,12 @@
   - ponytail：删除死代码（consumed/down 触点属性、补帧定时器流、blackBarTop、game.js 未用变量），修复「拖动中途加第二指补帧流未停」根因，双指平移标注 Phase 2 不提前实现。
   - ECC：触控输入信任边界过滤（非有限坐标/超量触点丢弃）；补边界测试（长按不补 click、捏合 wheel、非法坐标、cancel 清理），测试 8→12 项；新增一键 quality-gate。
   - vibe-coding：建立 memory-bank（GDD / 实施计划 / 架构 / 进度）+ AGENTS.md「Always 先读」规则。
-- 验证：`npm test` 12 项通过；audit-dom / check-size 通过；`npm run quality-gate` 全绿。
+- 验证：`npm test` 12 项通过；audit-dom / check-size / quality-gate 全绿（commit 89aead2，回滚点）。
+- **M0.8 仓库瘦身完成**：删除 186 个历史版本目录（assets/releases 91 个 + runtime/releases 91 个 + res/werhd/releases 4 个），`versions.json` 收敛为 0.83.4；工作树 686MB→22MB，全仓口径 13.76MB（<60MB）。已澄清：git pack 以 delta 存储历史，克隆体积本就 ~26MB，无需改写历史。
+- **M0.7 WASM Spike（Node 侧）通过**：`node spike/wasm-load/verify-node.js` 用 7zz.js 胶水 + `wasmBinary` 注入完成建 7z→列表→解压→chmod→读回闭环，PASS。关键结论（ADR-0003）：imports=env(40)+wasi_snapshot_preview1(7)；非浏览器环境需注入 wasmBinary；解压文件需 chmod 才能读回。
+- **M0.7 抖音端待验证**：`spike/wasm-load/douyin-spike/` 自包含工程就绪，需在开发者工具/真机跑三项 PASS 后更新本节。
 
 ## 待办（下一步）
 
-- M0.7 WASM Spike（7zz.wasm 在抖音运行时可行性）——最高优先级，结论影响 M1 路线。
-- M0.8 仓库瘦身（仅保留 0.83.4，全仓 <60MB）。
+- M0.7 抖音端 Spike 验证（开发者工具 + 真机，见 spike README）——需用户操作，完成后更新 ADR-0003 状态为"已接受"。
 - M1 打包链 / 迷你 DOM / 运行时桥。

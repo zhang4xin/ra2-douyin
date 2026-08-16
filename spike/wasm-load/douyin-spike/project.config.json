@@ -1,0 +1,11 @@
+{
+  "compileType": "game",
+  "appid": "touristappid",
+  "projectname": "ra2-douyin-wasm-spike",
+  "miniprogramRoot": "./",
+  "setting": {
+    "es6": true,
+    "minified": false,
+    "urlCheck": false
+  }
+}

@@ -13,9 +13,10 @@
 - [x] M0.5 协作文档：CONTRIBUTING / ADR-0001..0004 / roadmap / mobile-controls / security / memory-bank
 - [x] M0.6 提交推送至 zhang4xin/ra2-douyin
 - [ ] **M0.7 WASM Spike**：在开发者工具/真机验证 `runtime/releases/0.83.4-r0918ad8-dac2bf5b2/7zz.wasm` 能否用 `tt.getFileSystemManager` + `WebAssembly.instantiate` 加载执行 → 更新 ADR-0003。
-  - 验证：真机跑一个最小 7z 解压 demo，输出文件可读；记录机型/结论到 progress.md。
-- [ ] **M0.8 仓库瘦身**：仅保留 0.83.4 版本目录，历史版本移出 git（ADR-0002）。
-  - 验证：`npm run check-size` 全仓口径 < 60MB。
+  - 验证：真机跑一个最小 7z 解压 demo，输出文件可读；记录机型/结论入 progress.md。
+  - 进展：Node 侧 PASS（`spike/wasm-load/verify-node.js`）；抖音端工程就绪（`spike/wasm-load/douyin-spike/`）待用户跑。
+- [x] **M0.8 仓库瘦身**：仅保留 0.83.4 版本目录，历史版本移出 git（ADR-0002）。
+  - 验证：`npm run check-size` 全仓口径 < 60MB（实测 13.76MB，通过）。
 
 ## M1 引擎跑通（最高风险，关键路径）
 

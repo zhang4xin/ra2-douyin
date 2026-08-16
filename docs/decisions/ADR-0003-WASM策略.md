@@ -6,9 +6,20 @@
 ## 背景
 
 引擎依赖 WebAssembly：
+
 - `runtime/releases/0.83.4-r0918ad8-dac2bf5b2/7zz.wasm`（1.87MB，7z 解压游戏资源）；
 - `ffmpeg.min.js` 及其远程 `ffmpeg-core.wasm`（音视频处理，当前指向 `unpkg.com`，属供应链风险）。
-抖音小游戏运行时的 WASM 加载方式与浏览器不同（无 `<script src=".wasm">` / `fetch` 同源限制），需要验证。
+  抖音小游戏运行时的 WASM 加载方式与浏览器不同（无 `<script src=".wasm">` / `fetch` 同源限制），需要验证。
+
+## Spike 进展（2026-08-16）
+
+Node 侧已验证（`spike/wasm-load/verify-node.js`，PASS）：
+
+- `7zz.wasm` 为合法 WASM v1（魔数 `\0asm`），imports 分两组：`env`（40 项 emscripten/libc，含 `__sys_*` 系统调用、`time`、`exit`、`emscripten_resize_heap` 等）与 `wasi_snapshot_preview1`（7 项：`fd_*`、`environ_*`）。
+- 同一目录 `7zz.js`（288KB）是 emscripten UMD 胶水，CommonJS 导出 `SevenZip` 工厂；**必须注入 `wasmBinary` 字节**（其内置 `fetch` 加载在非浏览器环境不可用）。
+- 用胶水完成真实闭环：`FS.writeFile` → `callMain(['a', …])` 建 7z → `callMain(['l', …])` 列表 → `callMain(['x', '-y', '-o/out', …])` 解压 → `FS.chmod(0o644)` 后读回内容一致。7-Zip (z) 22.01，32-bit ILP32。
+- 注意：7z 解压出的文件默认权限过紧，**读回前需 `FS.chmod`**（端口实现要点）。
+- 抖音端验证：见 `spike/wasm-load/douyin-spike/`（自包含工程，待真机/开发者工具跑通后记录机型与三项 PASS/FAIL）。
 
 ## 决策（草案，Spike 后定稿）
 

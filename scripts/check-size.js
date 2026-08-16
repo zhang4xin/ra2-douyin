@@ -10,7 +10,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const INCLUDE_EXT = new Set(['.js', '.json', '.wasm', '.html', '.css', '.ini', '.webmanifest', '.ico']);
-const EXCLUDE_DIRS = new Set(['.git', 'node_modules', 'old']);
+const EXCLUDE_DIRS = new Set(['.git', 'node_modules']);
 
 function dirSize(dir) {
   let total = 0;
@@ -51,9 +51,19 @@ for (const p of mainPaths) {
 }
 const mainMB = mainBytes / (1024 * 1024);
 
+const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'build-config.json'), 'utf8'));
+const countDirs = (rel) => {
+  const p = path.join(ROOT, rel);
+  return fs.existsSync(p) ? fs.readdirSync(p).filter((n) => fs.statSync(path.join(p, n)).isDirectory()).length : 0;
+};
+const engineReleases = countDirs(config.engine.engineDir.replace(/\/[^/]+$/, ''));
+const runtimeReleases = countDirs(config.engine.runtimeDir.replace(/\/[^/]+$/, ''));
+
 console.log(`[check-size] 主包口径: ${mainMB.toFixed(2)} MB (预算 ${args.mainBudget} MB)`);
 console.log(`[check-size] 全仓口径: ${totalMB.toFixed(2)} MB (预算 ${args.totalBudget} MB)`);
-console.log('[check-size] 提示: 全仓含 92 个历史版本目录，正式分包后按 build-config.json 的 engine 目录统计。');
+console.log(
+  `[check-size] 已收敛引擎目录：assets ${engineReleases} 套 / runtime ${runtimeReleases} 套（仅保留 ${config.engine.upstreamVersion}）`,
+);
 
 let ok = true;
 if (mainMB > args.mainBudget) {
