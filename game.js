@@ -11,6 +11,15 @@ const ctx = canvas.getContext('2d');
 
 const adapter = createAdapter(tt);
 
+function ensureCanvasSize() {
+  const sys = (tt.getSystemInfoSync && tt.getSystemInfoSync()) || {};
+  const w = sys.windowWidth || sys.screenWidth || canvas.width || 1024;
+  const h = sys.windowHeight || sys.screenHeight || canvas.height || 768;
+  if (!canvas.width || canvas.width !== w) canvas.width = w;
+  if (!canvas.height || canvas.height !== h) canvas.height = h;
+  return { w, h };
+}
+
 const STATUS = {
   title: '网页红井 - 单机版',
   lines: [
@@ -24,8 +33,7 @@ const STATUS = {
 };
 
 function drawStatus() {
-  const w = canvas.width;
-  const h = canvas.height;
+  const { w, h } = ensureCanvasSize();
   ctx.fillStyle = '#0a0a14';
   ctx.fillRect(0, 0, w, h);
 
@@ -53,9 +61,7 @@ function drawStatus() {
 }
 
 function resize() {
-  const sys = tt.getSystemInfoSync ? tt.getSystemInfoSync() : {};
-  const w = sys.windowWidth || canvas.width;
-  const h = sys.windowHeight || canvas.height;
+  const { w, h } = ensureCanvasSize();
   adapter.viewport.setPhysical(w, h);
   drawStatus();
 }
@@ -73,8 +79,15 @@ if (typeof tt.onWindowResize === 'function') {
 } else if (canvas.on) {
   canvas.on('resize', resize);
 }
-resize();
-drawStatus();
+
+try {
+  resize();
+  drawStatus();
+  const sys = tt.getSystemInfoSync ? tt.getSystemInfoSync() : {};
+  console.log(`[game] 启动成功 canvas=${canvas.width}x${canvas.height} window=${sys.windowWidth}x${sys.windowHeight}`);
+} catch (e) {
+  console.error('[game] 启动失败：', e && e.stack ? e.stack : e);
+}
 
 // TODO(移植): 在此处加载 DOM 适配层并启动引擎（见 PORTING.md 路线图）。
 // Phase 1 目标：scripts/build.js 把 index.html 的 lib 链 + werhd.min.js
