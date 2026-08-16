@@ -14,6 +14,8 @@
 - **M0.7 WASM Spike（Node 侧）通过**：`node spike/wasm-load/verify-node.js` 用 7zz.js 胶水 + `wasmBinary` 注入完成建 7z→列表→解压→chmod→读回闭环，PASS。关键结论（ADR-0003）：imports=env(40)+wasi_snapshot_preview1(7)；非浏览器环境需注入 wasmBinary；解压文件需 chmod 才能读回。
 - **M0.7 抖音端待验证**：`spike/wasm-load/douyin-spike/` 自包含工程就绪，需在开发者工具/真机跑三项 PASS 后更新本节。
 - **工作目录收敛（重要）**：本地唯一工作副本统一为 `E:\youxi\hongjin\ra2-douyin`（已同步至 ae62389 并与 origin/main 一致，npm test 12/12）。原 `E:\youxi\hongjin\ra2web.github.io-main` 仅作历史副本不再使用；后续所有改动、提交、推送都在本目录进行。
+- **抖音开发者工具编译阻塞与修复**：根工程 `game.js` 用了 `canvas.on('resize')`（抖音无此 API）→ 改 `tt.onWindowResize`；同时工具会把包内**所有 .js** 编译成 CJS，而引擎 `werhd.min.js` 是 Vite ESM 带顶层 `await`（如 `await (0,_werhdmin.l)("…/ffmpeg.min.js")`）→ 编译直接失败。修复：`project.config.json` 加 `packOptions.ignore`（工具 ≥4.2.7 支持）跳过 `assets/releases` + `runtime/releases`；M1 打包链将把引擎打成可编译的 CommonJS 单包再放回包内（届时按文件而非整目录忽略）。
+- 新增 `.gitattributes`（`* text=auto eol=lf` + 二进制标记），统一 LF 行尾，避免 Windows CRLF 导致 prettier 误报（commit a819f30）。
 
 ## 待办（下一步）
 

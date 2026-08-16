@@ -8,5 +8,17 @@
     "minified": true,
     "urlCheck": false
   },
-  "compileType": "game"
+  "compileType": "game",
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "assets/releases"
+      },
+      {
+        "type": "folder",
+        "value": "runtime/releases"
+      }
+    ]
+  }
 }
