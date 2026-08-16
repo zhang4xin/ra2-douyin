@@ -23,16 +23,22 @@ function layout(cw, ch) {
   const margin = 6;
   const gap = 6;
   const count = BUILD_BUTTONS.length + UNIT_BUTTONS.length;
-  const bw = (cw - margin * 2 - gap * (count - 1)) / count;
-  const bh = UI_H - 12;
+  // 窄屏（竖屏）按钮排两排 3x2，宽屏保持单排，保证触控目标足够大
+  const cols = cw < 560 ? 3 : count;
+  const rows = Math.ceil(count / cols);
+  const bw = (cw - margin * 2 - gap * (cols - 1)) / cols;
+  const bh = (UI_H - 12 - gap * (rows - 1)) / rows;
   const by = ch - UI_H + 6;
   const all = [
     ...BUILD_BUTTONS.map((t) => ({ id: 'build:' + t, label: C.BUILDINGS[t].name, cost: C.BUILDINGS[t].cost })),
     ...UNIT_BUTTONS.map((t) => ({ id: 'unit:' + t, label: C.UNITS[t].name, cost: C.UNITS[t].cost })),
   ];
   all.forEach((b, i) => {
-    const x = margin + i * (bw + gap);
-    btns.push(Object.assign({}, b, { x, y: by, w: bw, h: bh }));
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const x = margin + col * (bw + gap);
+    const y = by + row * (bh + gap);
+    btns.push(Object.assign({}, b, { x, y, w: bw, h: bh }));
   });
 
   const restartBtn = { x: cw - 76, y: 8, w: 68, h: 30 };

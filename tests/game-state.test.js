@@ -117,9 +117,9 @@ test('移动：下达移动指令后单位靠近目标点', () => {
   const s = makeGame();
   const u = S.spawnUnit(s, TEAM.P, 'infantry', 300, 300);
   const startX = u.x;
-  S.giveOrder(s, [u.id], { kind: 'move', x: startX + 200, y: u.y });
+  S.giveOrder(s, [u.id], { kind: 'move', x: startX + 150, y: u.y });
   run(s, 3000);
-  assert.ok(Math.abs(u.x - (startX + 200)) < 80, `期望靠近目标点，实际位移=${Math.round(Math.abs(u.x - startX))}`);
+  assert.ok(Math.abs(u.x - (startX + 150)) < 80, `期望靠近目标点，实际位移=${Math.round(Math.abs(u.x - startX))}`);
 });
 
 test('战斗：单位会攻击射程内敌方单位并造成伤害', () => {

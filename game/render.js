@@ -233,12 +233,12 @@ function drawBottomBar(state, ctx, l) {
     ctx.strokeRect(b.x, b.y, b.w, b.h);
 
     ctx.fillStyle = affordable ? C.COLORS.ui.text : C.COLORS.ui.dim;
-    ctx.font = font(Math.max(12, Math.floor(b.h * 0.4)));
+    ctx.font = font(Math.max(11, Math.min(Math.floor(b.h * 0.4), Math.floor((b.w * 1.5) / b.label.length))));
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(b.label, b.x + b.w / 2, b.y + b.h * 0.34);
     ctx.fillStyle = affordable ? C.COLORS.ui.gold : C.COLORS.ui.dim;
-    ctx.font = font(Math.max(10, Math.floor(b.h * 0.3)));
+    ctx.font = font(Math.max(9, Math.min(Math.floor(b.h * 0.3), Math.floor((b.w * 1.3) / 4))));
     ctx.fillText(`${cost}金`, b.x + b.w / 2, b.y + b.h * 0.74);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';

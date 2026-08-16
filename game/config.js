@@ -7,8 +7,8 @@ const GAME_NAME = '钢铁前线';
 const GAME_VERSION = '0.1.0';
 
 const TILE = 22; // 地图格边长（地图空间）
-const MAP_COLS = 34;
-const MAP_ROWS = 30;
+const MAP_COLS = 22; // 竖屏：竖长战场（484 x 748）
+const MAP_ROWS = 34;
 
 const TILE_KIND = { GROUND: 0, ORE: 1, ROCK: 2 };
 
