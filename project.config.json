@@ -18,6 +18,18 @@
       {
         "type": "folder",
         "value": "runtime/releases"
+      },
+      {
+        "type": "folder",
+        "value": "tests"
+      },
+      {
+        "type": "folder",
+        "value": "scripts"
+      },
+      {
+        "type": "folder",
+        "value": "spike"
       }
     ]
   }
