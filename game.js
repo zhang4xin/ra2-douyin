@@ -65,6 +65,31 @@ function drawStatus() {
     ctx.fillText(tip, w / 2, h / 5 + (STATUS.lines.length + 1) * (h / 14) + i * (h / 18));
   });
   ctx.textAlign = 'left';
+
+  // 触控链路可视化：最近一次合成事件的位置与类型。
+  if (lastGesture) {
+    ctx.fillStyle = '#ffd24a';
+    ctx.strokeStyle = '#ffd24a';
+    ctx.beginPath();
+    ctx.arc(lastGesture.x, lastGesture.y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(lastGesture.x - 14, lastGesture.y);
+    ctx.lineTo(lastGesture.x + 14, lastGesture.y);
+    ctx.moveTo(lastGesture.x, lastGesture.y - 14);
+    ctx.lineTo(lastGesture.x, lastGesture.y + 14);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd24a';
+    ctx.font = `${Math.max(12, Math.floor(h / 40))}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `最近操作: ${lastGesture.type} @ (${Math.round(lastGesture.x)}, ${Math.round(lastGesture.y)})`,
+      w / 2,
+      h - Math.floor(h / 20),
+    );
+    ctx.textAlign = 'left';
+  }
 }
 
 function resize() {
@@ -73,12 +98,20 @@ function resize() {
   drawStatus();
 }
 
+// 最近一次合成手势（画布物理坐标），用于触控链路可视化。
+let lastGesture = null;
+
 // 把合成出的鼠标/wheel 事件派发到事件总线。
 // 引擎接入后，这里应把事件送到迷你 DOM 树的冒泡链（Phase 1）。
 adapter.bindTouch((ev) => {
   const logical = adapter.viewport.toLogical(ev.clientX, ev.clientY);
   if (!logical) return;
+  lastGesture = { type: ev.type, x: ev.clientX, y: ev.clientY };
+  if (ev.type !== 'mousemove') {
+    console.log('[game] 触控事件', ev.type, '@', Math.round(ev.clientX), Math.round(ev.clientY));
+  }
   adapter.eventTarget.dispatchEvent(ev);
+  drawStatus();
 });
 
 if (typeof tt.onWindowResize === 'function') {
