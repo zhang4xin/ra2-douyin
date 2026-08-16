@@ -84,6 +84,7 @@ function createGame(opts) {
     aiNext: 1000,
     wave: { active: false, threshold: 6, next: 0 },
     orderFx: [], // { x, y, t, kind } 指令特效（渲染用，纯数据）
+    panelTab: 'build', // 底部面板当前页：'build' | 'unit'
     stats: { P: { built: {}, killed: 0 }, E: { built: {}, killed: 0 } },
   };
 

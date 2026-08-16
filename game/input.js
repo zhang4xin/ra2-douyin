@@ -12,6 +12,7 @@ function createInputController(refs) {
   const ctrl = {
     pressOnButton: false,
     overRestart: false,
+    pending: null, // { tab } | { cell }
 
     onMouseDown(ev) {
       const { getState, getLayout, toast, restart } = refs;
@@ -24,9 +25,17 @@ function createInputController(refs) {
         return;
       }
 
-      const btn = UI.hitButton(l, ev.clientX, ev.clientY);
-      if (btn) {
+      const tab = UI.hitTab(l, ev.clientX, ev.clientY);
+      if (tab) {
         this.pressOnButton = true;
+        this.pending = { tab };
+        return;
+      }
+
+      const cell = UI.hitCell(l, ev.clientX, ev.clientY, state.panelTab);
+      if (cell) {
+        this.pressOnButton = true;
+        this.pending = { cell };
         return;
       }
 
@@ -108,9 +117,11 @@ function createInputController(refs) {
         if (this.overRestart) {
           this.overRestart = false;
           restart();
-        } else {
-          const btn = UI.hitButton(l, ev.clientX, ev.clientY);
-          if (btn) ctrl.buttonAction(btn, refs);
+        } else if (this.pending) {
+          const pending = this.pending;
+          this.pending = null;
+          if (pending.tab) ctrl.tabAction(pending.tab, state, toast);
+          else ctrl.cellAction(pending.cell, state, toast);
         }
         return;
       }
@@ -176,30 +187,33 @@ function createInputController(refs) {
       log('双指缩放功能开发中');
     },
 
-    buttonAction(btn, refs) {
-      const { getState, toast, log } = refs;
-      const state = getState();
+    tabAction(tab, state, toast) {
+      const next = tab.id.slice('tab:'.length);
+      if (state.panelTab === next) return;
+      state.panelTab = next;
+      state.placement = null;
+      state.placementPos = null;
+      toast(next === 'build' ? '建筑列表' : '兵种列表');
+    },
 
-      if (btn.id.indexOf('build:') === 0) {
-        const type = btn.id.slice('build:'.length);
-        const def = C.BUILDINGS[type];
+    cellAction(cell, state, toast) {
+      if (cell.kind === 'build') {
+        const def = C.BUILDINGS[cell.type];
         if (def.cost < 0) return;
         if (state.money.P < def.cost) {
           toast('资金不足');
           return;
         }
-        if (state.placement && state.placement.type === type) {
+        if (state.placement && state.placement.type === cell.type) {
           state.placement = null;
           state.placementPos = null;
-          log('退出建造');
         } else {
-          state.placement = { type };
-          log('建造模式: ' + def.name + '（点击地图放置，长按取消）');
+          state.placement = { type: cell.type };
+          toast('点击地图放置，长按取消');
         }
-      } else if (btn.id.indexOf('unit:') === 0) {
-        const type = btn.id.slice('unit:'.length);
-        const res = S.queueUnit(state, C.TEAM.P, type);
-        if (res.ok) toast(`开始生产 ${C.UNITS[type].name}`);
+      } else {
+        const res = S.queueUnit(state, C.TEAM.P, cell.type);
+        if (res.ok) toast(`开始生产 ${C.UNITS[cell.type].name}`);
         else toast(res.reason);
       }
     },

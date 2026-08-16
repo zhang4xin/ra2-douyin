@@ -39,6 +39,7 @@ function smokeOnce(w, h, label) {
   const getState = () => state;
   const getLayout = () => UI.layout(canvas.width, canvas.height);
   const ctrl = createInputController({ getState, getLayout, toast, log, restart });
+  const l = getLayout();
 
   function frame(dt) {
     S.update(state, dt);
@@ -69,22 +70,31 @@ function smokeOnce(w, h, label) {
     return UI.toScreen(l, (gx + 0.5) * C.TILE, (gy + 0.5) * C.TILE);
   }
 
-  function tapButton(id) {
-    const l = getLayout();
-    const b = l.btns.find((x) => x.id === id);
-    if (!b) throw new Error(label + ' 找不到按钮 ' + id);
-    const cx = b.x + b.w / 2;
-    const cy = b.y + b.h / 2;
+  function tapCenter(rect) {
+    const cx = rect.x + rect.w / 2;
+    const cy = rect.y + rect.h / 2;
     ctrl.onMouseDown(ev('mousedown', cx, cy));
     ctrl.onMouseUp(ev('mouseup', cx, cy));
     ctrl.onClick(ev('click', cx, cy));
   }
 
+  function tapTab(id) {
+    const t = l.tabs.find((x) => x.id === id);
+    if (!t) throw new Error(label + ' 找不到页签 ' + id);
+    tapCenter(t.rect);
+  }
+
+  function tapCell(id) {
+    const c = l.cells.find((x) => x.id === id);
+    if (!c) throw new Error(label + ' 找不到格子 ' + id);
+    tapCenter(c.rect);
+  }
+
   frame(16);
   console.log(`[smoke] ${label} 初始渲染 OK`);
 
-  // 建造兵营
-  tapButton('build:barracks');
+  // 建造兵营（默认「建筑」页签）
+  tapCell('build:barracks');
   const sp = freeSpot(2, 2);
   const spPos = screenOf(sp.gx, sp.gy);
   ctrl.onMouseMove(ev('mousemove', spPos.x, spPos.y));
@@ -93,8 +103,10 @@ function smokeOnce(w, h, label) {
   if (!state.ents.some((e) => e.type === 'barracks' && e.team === C.TEAM.P)) throw new Error(label + ' 兵营建造失败');
   console.log(`[smoke] ${label} 建造兵营 OK`);
 
-  // 生产步兵
-  tapButton('unit:infantry');
+  // 切到「兵种」页签并生产步兵
+  tapTab('tab:unit');
+  if (state.panelTab !== 'unit') throw new Error(label + ' 页签切换失败');
+  tapCell('unit:infantry');
   run(4000);
   const units = state.ents.filter((e) => e.kind === 'unit' && e.team === C.TEAM.P);
   if (!units.length) throw new Error(label + ' 步兵未产出');

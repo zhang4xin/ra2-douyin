@@ -187,61 +187,329 @@ function drawOrderFx(state, ctx, l) {
   }
 }
 
+const RA2 = {
+  metalLight: '#9aa0aa',
+  metalBase: '#6f7480',
+  metalDark: '#4a4e58',
+  bevelHi: 'rgba(255,255,255,0.25)',
+  bevelLo: 'rgba(0,0,0,0.4)',
+  panel: '#3c414b',
+  panelBorder: '#565c68',
+  money: '#00e000',
+  cyan: '#00d8ff',
+  red: '#ff3b30',
+  gold: '#ffd24a',
+  text: '#dfe5ee',
+  dim: '#98a0ad',
+};
+
+function metalRect(ctx, x, y, w, h) {
+  ctx.fillStyle = RA2.metalBase;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = RA2.bevelHi;
+  ctx.fillRect(x, y, w, 1);
+  ctx.fillRect(x, y, 1, h);
+  ctx.fillStyle = RA2.bevelLo;
+  ctx.fillRect(x, y + h - 1, w, 1);
+  ctx.fillRect(x + w - 1, y, 1, h);
+}
+
+function screw(ctx, x, y) {
+  ctx.fillStyle = RA2.metalDark;
+  ctx.beginPath();
+  ctx.arc(x, y, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(x - 1.2, y - 1.2);
+  ctx.lineTo(x + 1.2, y + 1.2);
+  ctx.stroke();
+}
+
+function activeProductionOf(state, team, unitType) {
+  for (const e of state.ents) {
+    if (e.kind !== 'building' || e.team !== team) continue;
+    if (e.prodQueue && e.prodQueue.length && e.prodQueue[0] === unitType) return e;
+  }
+  return null;
+}
+
+function activeProduction(state, team) {
+  for (const e of state.ents) {
+    if (e.kind !== 'building' || e.team !== team) continue;
+    if (e.prodQueue && e.prodQueue.length) return { building: e, type: e.prodQueue[0] };
+  }
+  return null;
+}
+
 function drawTopBar(state, ctx, l) {
-  ctx.fillStyle = C.COLORS.ui.bar;
-  ctx.fillRect(0, 0, l.cw, 42);
-  ctx.fillStyle = C.COLORS.ui.gold;
-  ctx.font = font(Math.max(14, Math.round(l.cw * 0.02)));
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillText(`资金 ${Math.floor(state.money.P)}`, 12, 21);
-  ctx.fillStyle = C.COLORS.ui.text;
-  ctx.fillText(`选中 ${state.selection.length} 单位`, 12 + l.cw * 0.18, 21);
-  ctx.fillStyle = C.COLORS.ui.dim;
-  ctx.fillText(`${C.GAME_NAME} v${C.GAME_VERSION}`, l.cw - 190, 21);
+  metalRect(ctx, 0, 0, l.cw, l.topH);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
 
-  // 重开按钮
-  const r = l.restartBtn;
-  ctx.fillStyle = 'rgba(42,51,80,0.9)';
+  // 资金（RA2 绿色）
+  ctx.fillStyle = RA2.money;
+  ctx.font = font(Math.max(16, Math.round(l.cw * 0.045)));
+  ctx.fillText(`$${Math.floor(state.money.P)}`, 12, Math.round(l.topH * 0.34));
+
+  // 部队 / 收入
+  ctx.fillStyle = RA2.text;
+  ctx.font = font(11);
+  const units = state.ents.filter((e) => e.kind === 'unit' && e.team === C.TEAM.P).length;
+  const income =
+    C.INCOME.base +
+    state.ents.filter((e) => e.kind === 'building' && e.team === C.TEAM.P && e.type === 'refinery').length *
+      C.INCOME.perRefinery;
+  ctx.fillText(`部队 ${units} · 收入 +${income}/10s`, 12, Math.round(l.topH * 0.72));
+
+  drawPower(ctx, l, income);
+  drawRadar(state, ctx, l);
+}
+
+function drawPower(ctx, l, income) {
+  const p = l.power;
+  metalRect(ctx, p.x, p.y, p.w, p.h);
+  ctx.fillStyle = '#0a0f0a';
+  ctx.fillRect(p.x + 1, p.y + 1, p.w - 2, p.h - 2);
+  const ratio = Math.min(1, income / 400);
+  const h = Math.max(0, Math.round((p.h - 2) * ratio));
+  ctx.fillStyle = ratio >= 1 ? '#00e000' : ratio >= 0.5 ? '#b8d900' : '#d90000';
+  ctx.fillRect(p.x + 1, p.y + p.h - 1 - h, p.w - 2, h);
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 3; i++) {
+    const yy = p.y + 1 + ((p.h - 2) / 3) * i;
+    ctx.beginPath();
+    ctx.moveTo(p.x + 1, yy);
+    ctx.lineTo(p.x + p.w - 1, yy);
+    ctx.stroke();
+  }
+}
+
+function drawRadar(state, ctx, l) {
+  const r = l.radar;
+  ctx.fillStyle = '#101318';
   ctx.fillRect(r.x, r.y, r.w, r.h);
-  ctx.strokeStyle = C.COLORS.ui.border;
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(r.x, r.y, r.w, r.h);
-  ctx.fillStyle = C.COLORS.ui.text;
-  ctx.font = font(13);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('重开', r.x + r.w / 2, r.y + r.h / 2);
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
+  const rs = Math.min((r.w - 4) / C.MAP_COLS, (r.h - 4) / C.MAP_ROWS);
+  const ox = r.x + (r.w - C.MAP_COLS * rs) / 2;
+  const oy = r.y + (r.h - C.MAP_ROWS * rs) / 2;
+  for (let gy = 0; gy < C.MAP_ROWS; gy++) {
+    for (let gx = 0; gx < C.MAP_COLS; gx++) {
+      const k = state.map[gy][gx];
+      ctx.fillStyle = k === C.TILE_KIND.ORE ? '#a88422' : k === C.TILE_KIND.ROCK ? '#5a626e' : '#22262c';
+      ctx.fillRect(Math.round(ox + gx * rs), Math.round(oy + gy * rs), Math.ceil(rs), Math.ceil(rs));
+    }
+  }
+  for (const e of state.ents) {
+    const cx = e.kind === 'building' ? e.gx + e.w / 2 : e.x / C.TILE;
+    const cy = e.kind === 'building' ? e.gy + e.h / 2 : e.y / C.TILE;
+    const sz = e.kind === 'building' ? 2 : 1;
+    ctx.fillStyle = e.team === C.TEAM.P ? '#55ccff' : '#ff5544';
+    ctx.fillRect(Math.round(ox + cx * rs - sz / 2), Math.round(oy + cy * rs - sz / 2), sz, sz);
+  }
+  ctx.strokeStyle = RA2.metalLight;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+  screw(ctx, r.x + 3, r.y + 3);
+  screw(ctx, r.x + r.w - 3, r.y + 3);
+  screw(ctx, r.x + 3, r.y + r.h - 3);
+  screw(ctx, r.x + r.w - 3, r.y + r.h - 3);
 }
 
 function drawBottomBar(state, ctx, l) {
-  ctx.fillStyle = C.COLORS.ui.bar;
-  ctx.fillRect(0, l.ch - l.UI_H, l.cw, l.UI_H);
-  for (const b of l.btns) {
-    const isBuild = b.id.indexOf('build:') === 0;
-    const cost = b.cost;
-    const affordable = state.money.P >= cost;
-    const active = isBuild && state.placement && state.placement.type === b.id.slice('build:'.length);
-    ctx.fillStyle = active ? 'rgba(255,179,64,0.25)' : 'rgba(22,27,38,0.95)';
-    ctx.fillRect(b.x, b.y, b.w, b.h);
-    ctx.strokeStyle = active ? C.COLORS.ui.hot : C.COLORS.ui.border;
-    ctx.lineWidth = active ? 2 : 1;
-    ctx.strokeRect(b.x, b.y, b.w, b.h);
+  const py = l.ch - l.panelH;
+  metalRect(ctx, 0, py, l.cw, l.panelH);
+  drawPanelStrip(state, ctx, l);
+  drawTabs(state, ctx, l);
+  drawCells(state, ctx, l);
+}
 
-    ctx.fillStyle = affordable ? C.COLORS.ui.text : C.COLORS.ui.dim;
-    ctx.font = font(Math.max(11, Math.min(Math.floor(b.h * 0.4), Math.floor((b.w * 1.5) / b.label.length))));
+function drawPanelStrip(state, ctx, l) {
+  const s = l.strip;
+  ctx.fillStyle = RA2.panel;
+  ctx.fillRect(s.x, s.y, s.w, s.h);
+  ctx.strokeStyle = RA2.panelBorder;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(s.x + 0.5, s.y + 0.5, s.w - 1, s.h - 1);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.font = font(12);
+  const prod = activeProduction(state, C.TEAM.P);
+  if (prod) {
+    ctx.fillStyle = RA2.gold;
+    const label = `${C.UNITS[prod.type].name} 生产中`;
+    ctx.fillText(label, s.x + 8, s.y + s.h / 2);
+    const total = prod.building.prodTotal || 1;
+    const frac = Math.max(0, Math.min(1, prod.building.prodT / total));
+    const bw = Math.max(40, Math.floor(s.w * 0.24));
+    const bx = s.x + s.w - bw - 74;
+    ctx.fillStyle = '#0a0f0a';
+    ctx.fillRect(bx, s.y + s.h / 2 - 4, bw, 8);
+    ctx.fillStyle = RA2.cyan;
+    ctx.fillRect(bx, s.y + s.h / 2 - 4, bw * frac, 8);
+  } else {
+    ctx.fillStyle = RA2.dim;
+    ctx.fillText(state.panelTab === 'build' ? '选择要建造的建筑' : '选择要生产的兵种', s.x + 8, s.y + s.h / 2);
+  }
+
+  // 重开按钮
+  const r = l.restartBtn;
+  metalRect(ctx, r.x, r.y, r.w, r.h);
+  ctx.fillStyle = RA2.text;
+  ctx.font = font(12);
+  ctx.textAlign = 'center';
+  ctx.fillText('重开', r.x + r.w / 2, r.y + r.h / 2);
+  ctx.textAlign = 'left';
+}
+
+function drawTabs(state, ctx, l) {
+  for (const t of l.tabs) {
+    const active = state.panelTab === t.id.slice('tab:'.length);
+    const r = t.rect;
+    ctx.fillStyle = active ? '#4a7a52' : RA2.metalDark;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = RA2.bevelHi;
+    ctx.fillRect(r.x, r.y, r.w, 1);
+    ctx.fillRect(r.x, r.y, 1, r.h);
+    ctx.fillStyle = RA2.bevelLo;
+    ctx.fillRect(r.x, r.y + r.h - 1, r.w, 1);
+    ctx.fillRect(r.x + r.w - 1, r.y, 1, r.h);
+    ctx.strokeStyle = active ? RA2.cyan : RA2.panelBorder;
+    ctx.lineWidth = active ? 2 : 1;
+    ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+
+    const cx = r.x + r.w / 2;
+    const icY = r.y + r.h * 0.32;
+    const col = active ? '#aaffbb' : '#c8ceda';
+    if (t.id === 'tab:build') drawBuildingIcon(ctx, cx, icY, 20, col);
+    else drawInfantryIcon(ctx, cx, icY, 20, col);
+
+    ctx.fillStyle = active ? '#ffffff' : RA2.dim;
+    ctx.font = font(11);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(b.label, b.x + b.w / 2, b.y + b.h * 0.34);
-    ctx.fillStyle = affordable ? C.COLORS.ui.gold : C.COLORS.ui.dim;
-    ctx.font = font(Math.max(9, Math.min(Math.floor(b.h * 0.3), Math.floor((b.w * 1.3) / 4))));
-    ctx.fillText(`${cost}金`, b.x + b.w / 2, b.y + b.h * 0.74);
+    ctx.fillText(t.label, cx, r.y + r.h * 0.72);
     ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
+  }
+}
+
+function drawCells(state, ctx, l) {
+  for (const c of l.cells) {
+    if (c.kind !== state.panelTab) continue;
+    const r = c.rect;
+    const affordable = state.money.P >= c.cost;
+    const placing = state.placement && state.placement.type === c.type;
+
+    ctx.fillStyle = '#2a2f3a';
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = RA2.bevelHi;
+    ctx.fillRect(r.x, r.y, r.w, 1);
+    ctx.fillRect(r.x, r.y, 1, r.h);
+    ctx.fillStyle = RA2.bevelLo;
+    ctx.fillRect(r.x, r.y + r.h - 1, r.w, 1);
+    ctx.fillRect(r.x + r.w - 1, r.y, 1, r.h);
+    ctx.strokeStyle = placing ? RA2.cyan : affordable ? RA2.metalLight : RA2.metalDark;
+    ctx.lineWidth = placing ? 2 : 1;
+    ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+
+    const cx = r.x + r.w / 2;
+    const icY = r.y + r.h * 0.3;
+    const icColor = affordable ? '#dfe5ee' : '#6a7280';
+    const icSize = Math.min(18, r.w * 0.3);
+    if (c.kind === 'build') drawBuildingIcon(ctx, cx, icY, icSize, icColor, c.type);
+    else drawInfantryIcon(ctx, cx, icY, icSize, icColor, c.type === 'tank');
+
+    ctx.fillStyle = affordable ? RA2.text : RA2.dim;
+    ctx.font = font(Math.max(10, Math.min(Math.floor(r.h * 0.2), Math.floor((r.w * 1.5) / c.label.length))));
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(c.label, cx, r.y + r.h * 0.56);
+    ctx.fillStyle = affordable ? RA2.money : RA2.red;
+    ctx.font = font(Math.max(9, Math.floor(r.h * 0.16)));
+    ctx.fillText(`${c.cost}金`, cx, r.y + r.h * 0.78);
+    ctx.textAlign = 'left';
+
+    if (c.kind === 'unit') {
+      const prod = activeProductionOf(state, C.TEAM.P, c.type);
+      if (prod) {
+        const frac = Math.max(0, Math.min(1, prod.prodT / (prod.prodTotal || 1)));
+        ctx.fillStyle = '#0a0f0a';
+        ctx.fillRect(r.x + 4, r.y + r.h - 5, r.w - 8, 3);
+        ctx.fillStyle = RA2.cyan;
+        ctx.fillRect(r.x + 4, r.y + r.h - 5, (r.w - 8) * frac, 3);
+      }
+    }
+  }
+}
+
+function drawBuildingIcon(ctx, cx, cy, s, color, type) {
+  const half = s / 2;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.4;
+  if (type === 'base' || type === 'barracks') {
+    ctx.strokeRect(cx - half, cy - half * 0.7, s, s * 0.85);
+    ctx.beginPath();
+    ctx.moveTo(cx - half, cy - half * 0.7);
+    ctx.lineTo(cx, cy - half * 1.1);
+    ctx.lineTo(cx + half, cy - half * 0.7);
+    ctx.stroke();
+    ctx.fillRect(cx - 2, cy + half * 0.15, 4, 4);
+  } else if (type === 'factory') {
+    ctx.strokeRect(cx - half, cy - half * 0.5, s, s * 0.6);
+    ctx.fillRect(cx - half * 0.4, cy - half * 1.1, 5, 4);
+  } else if (type === 'refinery') {
+    ctx.strokeRect(cx - half, cy - half * 0.5, s, s * 0.7);
+    ctx.beginPath();
+    ctx.moveTo(cx - half, cy + half * 0.2);
+    ctx.lineTo(cx, cy + half * 0.6);
+    ctx.lineTo(cx + half, cy + half * 0.2);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.arc(cx, cy + 2, s * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + 2);
+    ctx.lineTo(cx, cy - half);
+    ctx.stroke();
+  }
+}
+
+function drawInfantryIcon(ctx, cx, cy, s, color, isTank) {
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.5;
+  if (isTank) {
+    ctx.fillRect(cx - s * 0.45, cy - s * 0.25, s * 0.9, s * 0.5);
+    ctx.fillRect(cx + s * 0.2, cy - s * 0.15, s * 0.55, s * 0.15);
+    ctx.fillRect(cx - s * 0.5, cy + s * 0.3, s, s * 0.14);
+  } else {
+    ctx.beginPath();
+    ctx.arc(cx, cy - s * 0.35, s * 0.16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - s * 0.15);
+    ctx.lineTo(cx, cy + s * 0.2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - s * 0.05);
+    ctx.lineTo(cx - s * 0.3, cy + s * 0.35);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - s * 0.05);
+    ctx.lineTo(cx + s * 0.3, cy + s * 0.35);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + s * 0.2);
+    ctx.lineTo(cx - s * 0.25, cy + s * 0.5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + s * 0.2);
+    ctx.lineTo(cx + s * 0.25, cy + s * 0.5);
+    ctx.stroke();
   }
 }
 

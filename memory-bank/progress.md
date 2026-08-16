@@ -21,6 +21,8 @@
 - 质量门禁升级：新增 `scripts/smoke-render.js` 无头渲染+输入冒烟测试并纳入 quality-gate；单测新增 `tests/game-state.test.js`（13 项核心逻辑用例）；`audit-dom` 扫描范围扩到 `game/`；`check-size` 重写（不再依赖引擎目录）。全部门禁绿（25 测试 + 冒烟 + 审计 + 体积 + 格式）。
 - 测试进程不退出的坑：`boot.test.js` 加载 game.js 后主循环用 `setTimeout` 链无限 rAF，测试完成后 Node 等待句柄不退出 → 统一加 `--test-force-exit`（测试本身 25/25 全过）。
 - 文档同步：README/AGENTS/CONTRIBUTING/@architecture 全面改写为「原创 RTS」定位；新增 ADR-0005；删除 `spike/`（7z WASM 验证已完成使命）。
+- **整体改竖屏**：game.json → portrait；地图改竖长 22×34；底部操作栏窄屏 3×2 两排；冒烟测试覆盖横竖屏双布局。
+- **UI 移植红警经典风格**：金属灰面板（斜切高光/暗角）、绿色资金条、能量条（按收入变色）、右上角雷达小地图（矿/岩/敌我据点）、底部建造面板（建筑/兵种双页签 + 格子图标/费用/生产进度条 + 生产进度条 + 重开按钮），全部 canvas 自绘零素材；新增 `tests/ui-layout.test.js`（3 项布局/命中用例）。
 
 ## 待办（下一步）
 
