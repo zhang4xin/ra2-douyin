@@ -99,6 +99,10 @@ function createMockTT(options) {
       listeners.touchCancel.push(fn);
     },
 
+    onWindowResize(fn) {
+      listeners.windowResize = (listeners.windowResize || []).concat([fn]);
+    },
+
     // 测试辅助：模拟一次"按下-移动-抬起"
     simulateTouch(events) {
       const evs = Array.isArray(events) ? events : [events];

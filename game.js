@@ -68,7 +68,11 @@ adapter.bindTouch((ev) => {
   adapter.eventTarget.dispatchEvent(ev);
 });
 
-canvas.on('resize', resize);
+if (typeof tt.onWindowResize === 'function') {
+  tt.onWindowResize(resize);
+} else if (canvas.on) {
+  canvas.on('resize', resize);
+}
 resize();
 drawStatus();
 
